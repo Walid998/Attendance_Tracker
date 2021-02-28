@@ -82,7 +82,7 @@ and login with any user you want
 </li>
 </ol>
 
-### That's all about how the application works. <i>Thank You</i>
+##### That's all about how the application works.
 
 
 
