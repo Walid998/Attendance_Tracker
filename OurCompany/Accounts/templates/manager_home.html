@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .sign{
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin: auto;
+  }
+</style>
+<h2 style="text-align:center;margin-top:40px">Welcome <i>MR. {{user.username}}</i> Here is Today's Schedule</h2>
+<br />
+<table class="table" style="text-align:center;margin: auto;">
+  <thead>
+    <tr>
+      <th>&nbsp;&nbsp;&nbsp; Attendants</th>
+      <th>Leave Requests</th>
+      <!-- <th>Has &nbsp;&nbsp;&nbsp; Left</th> -->
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><div class="sign" style="background-color: green;"></div></td>
+      <td><div class="sign" style="background-color: rgb(255, 145, 0);"></div></td>
+      <!-- <td><div class="sign" style="background-color: red;"></div></td> -->
+    </tr>
+    <tr>
+      <td>{% if attendants == 0 %}0{% else %}{{attendants}}{% endif %}</td>
+      <td>{% if leave_requests == 0 %}0{% else %}{{leave_requests}}{% endif %}</td>
+      <!-- <td>15</td> -->
+    </tr>
+  </tbody>
+</table>
+<ul id="message-list" style="list-style-type:none;">
+
+    </ul>
+  <script src="/static/jQuery/jquery-3.4.1.js"></script>
+
+    {% comment %} <script>
+        console.log($("#username").val());
+        const url = "ws://localhost:8000/ws/";
+        const ws = new WebSocket(url);
+        ws.onopen = function(){
+            console.log("connections is opend");
+            ws.send("thanks for connecting")
+        }
+        ws.onmessage = function(event){
+            console.log("message is recieved");
+            
+            $("#message-list").append("<li>"+event.data+"</li>")
+        }
+        ws.onclose = function(){
+            console.log("connections is closed")
+        }
+        ws.onerror = function(){
+            console.log("error in connection")
+        }
+        $(document).ready(function(){
+            $("#message-form").submit(function(e){
+                e.preventDefault();
+                sendMessage();
+            });
+            $("#SendNotiForm").submit(function(e){
+                e.preventDefault();
+                sendNotification();
+            });
+        });
+        function sendMessage(){
+            ws.send($("#message").val());
+            $("#message").val('');
+            return false;
+        }
+        function sendNotification(){
+            ws.send($("#username").val());
+            return false;
+        }
+    </script> {% endcomment %}
+{% endblock content %}

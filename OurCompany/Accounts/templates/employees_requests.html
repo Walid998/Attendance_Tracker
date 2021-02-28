@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 style="text-align:center"> Leave  Requests</h1>
+<br />
+<table id="Request_Table" class="table" style="text-align:center;margin: auto;">
+  <thead>
+    <tr>
+      <th>Employee Name</th>
+      <th>Status</th>
+      <th>date - time</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for request in leave_requests %}
+    <tr>
+        <td hidden>{{request.id}}</td>
+        <td>{{request.user_id}}</td>
+        <td>Wants to leave</td>
+        <td>{{request.leave_request_at}}</td>
+        <td>
+          <button class="btn btn-primary" onclick="ApproveRequest(this)">approve</button>
+          <button class="btn btn-danger" onclick="CancelRequest(this)">cancel</button>
+        </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<script src="/static/jQuery/jquery-3.4.1.js"></script>
+<script type="text/javascript">
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+
+  function ApproveRequest(employeeLog){
+    var EmpName = $(employeeLog).closest('tr').find("td:eq(1)").text();
+    var r = confirm("Employee \" "+EmpName+" \" approverd to leave");
+    if(r == true){
+    var logId = $(employeeLog).closest('tr').find("td:eq(0)").text();
+    var url = `http://localhost:8000/api/Accounts/approve_request/${logId}/`
+      fetch(url,{
+        method:'POST',
+        headers: {'Content-type':'application/json',
+                  'X-CSRFToken':csrftoken},
+        //body: JSON.stringify({"leave_request_at":leave_request_at})
+      }).then(function(response){
+        notify_with_approve(EmpName,"Approved")
+        $(employeeLog).closest('tr').remove();
+      });
+    }
+  }
+  function notify_with_approve(employee_username,manager_action){
+    const url = "ws://localhost:8000/ws/"+employee_username+"/";
+    const ws = new WebSocket(url);
+    ws.onopen = function(){
+          ws.send(manager_action)
+      }
+  }
+
+  function CancelRequest(employeeLog){
+    var EmpName = $(employeeLog).closest('tr').find("td:eq(1)").text();
+    var r = confirm("Employee \" "+EmpName+" \" not permitted to leave");
+    if(r == true){
+    var logId = $(employeeLog).closest('tr').find("td:eq(0)").text();
+    var url = `http://localhost:8000/api/Accounts/cancel_request/${logId}/`
+      fetch(url,{
+        method:'POST',
+        headers: {'Content-type':'application/json',
+                  'X-CSRFToken':csrftoken},
+      }).then(function(response){
+        notify_with_cancel(EmpName.trim(),"Cancelled")
+        $(employeeLog).closest('tr').remove();
+      });
+    }
+  }
+
+  function notify_with_cancel(employee_username,manager_action){
+    const url = "ws://localhost:8000/ws/"+employee_username+"/";
+    const ws = new WebSocket(url);
+    ws.onopen = function(){
+          ws.send(manager_action)
+      }
+  }
+  const incoming_requs_url = "ws://localhost:8000/ws/"
+  const incom_ws = new WebSocket(incoming_requs_url);
+  incom_ws.onmessage = function(event){
+    let noti_holder = String(event.data).split("^");
+    let new_request = 
+     '<tr><td hidden>'+noti_holder[0]+'</td>'
+    +'<td>'+noti_holder[1]+'</td>'
+    +'<td>Wants to leave</td>'
+    +'<td>'+noti_holder[3]+'</td>'
+    +'<td><button class="btn btn-primary" onclick="ApproveRequest(this)">approve</button> '
+    +'<button class="btn btn-danger" onclick="CancelRequest(this)">cancel</button></td></tr>'
+    
+    $("#Request_Table").append(new_request);
+    //0 //1
+    //window.location.replace('/Requests')
+  }
+</script>
+{% endblock content %}

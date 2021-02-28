@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 style="text-align:center">Welcome - {{user.username}}</h1>
+<br>
+{% if user.is_authenticated and user.groups.all.0.name == 'Employee' %}
+<div class="card text-center">
+  <div class="card-header">
+    Attendance Manager
+  </div>
+  <div class="card-body">
+    {% comment %} <h5 class="card-title">Attendance Manager</h5> {% endcomment %}
+    
+    {% if CurrentLog.leave_request_at != None and CurrentLog.allow_leave == True%}
+      
+      <p class="card-text">Your request to leave have been approved, You can leave now !</p>
+      <form id="Leave_Form" method="POST">
+        {% csrf_token %}
+        <input type="hidden" id="LogId" value="{{CurrentLog.id}}">
+        <button type="submit" class="btn btn-danger" style="width: 80px;">Leave</button>
+      </form>
+      
+    {% elif CurrentLog.leave_request_at != None and CurrentLog.allow_leave == False %}
+      <div id="RespondDiv">
+      <p class="card-text">Your request have been sent, please wait for manager response.</p>
+      <button type="button" class="btn btn-secondary" style="cursor: default;" disabled>Request Pending</button>
+      </div>
+    {% else %}
+    <div id="RequestDiv">
+      <p class="card-text">If you want to leave you have to make request to leave.</p>
+      <form id="Request_Form" method="POST">
+        {% csrf_token %}
+        <input type="hidden" id="LogId" value="{{CurrentLog.id}}">
+        <button type="submit" class="btn btn-primary">Make Request</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-footer text-muted">
+    loged in at: {{CurrentLog.logedin_at}}
+  </div>
+</div>
+{% endif %}
+<input type="hidden" value="{{user.username}}" id="CurrentUser" />
+<!-- <button type="" onclick="hitNoti()">hit</button> -->
+<script src="/static/jQuery/jquery-3.4.1.js"></script>
+<script type="text/javascript">
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+    $(document).ready(function(){
+      
+      $("#Request_Form").submit(function(e){
+        e.preventDefault();
+        make_leave_request();
+        PushLogNoti();
+      });
+      $("#Leave_Form").submit(function(e){
+        e.preventDefault();
+        leave();
+      });
+    });
+    function make_leave_request(){
+      var logId = $("#LogId").val();
+      var leave_request_at = new Date($.now()); 
+      var url = `http://localhost:8000/api/Accounts/leave_request/${logId}/`
+      fetch(url,{
+        method:'POST',
+        headers: {'Content-type':'application/json',
+                  'X-CSRFToken':csrftoken},
+        body: JSON.stringify({"leave_request_at":leave_request_at})
+      }).then(function(response){
+        let pending_div = '<div id="RespondDiv"><p class="card-text">Your request have been sent, please wait for manager response.</p>'+
+                         '<button type="button" class="btn btn-secondary" style="cursor: default;" disabled>Request Pending</button></div>';
+   
+        $("#RequestDiv").replaceWith(pending_div);
+      });
+    }
+    function leave(){
+      var logId = $("#LogId").val();
+      var logedout_at = new Date($.now()); 
+      var url = `http://localhost:8000/api/Accounts/leave/${logId}/`
+      fetch(url,{
+        method:'POST',
+        headers: {'Content-type':'application/json',
+                  'X-CSRFToken':csrftoken},
+        body: JSON.stringify({"logedout_at":logedout_at})
+      }).then(function(response){
+        window.location.replace('http://localhost:8000/accounts/login/')
+      });
+    }
+    function PushLogNoti(){
+      var current_user =$("#CurrentUser").val();
+      var at = new Date($.now());
+      var NotiString = $("#LogId").val()+"^"+$("#CurrentUser").val()+"^wants to leave^"+at.toLocaleString();
+      var url = "http://localhost:8000/api/Accounts/push_noti/"
+      fetch(url,{
+        method:'POST',
+        headers: {'Content-type':'application/json',
+                  'X-CSRFToken':csrftoken},
+        body: JSON.stringify({"n_from":current_user,"message":"wants to leave","at":at})
+      }).then(function(response){
+        hitNoti(NotiString);
+        console.log("notification sent")
+      });
+      
+    }
+    function hitNoti(NotiString){
+      const url = "ws://localhost:8000/ws/";
+      const ws = new WebSocket(url);
+      ws.onopen = function(){
+          console.log("connections is opend");
+          ws.send(NotiString)
+      }
+    }
+
+    const emp_url = "ws://localhost:8000/ws/"+$("#CurrentUser").val().trim()+"/";
+    const emp_ws = new WebSocket(emp_url);
+    emp_ws.onmessage = function(event){
+      if(event.data == "Cancelled"){
+      alert("Hi "+ $("#CurrentUser").val().trim() + " your leave request has been cancelled !")
+      window.location.replace("/Home")
+      }
+      else if (event.data == "Approved"){
+        alert("hi "+ $("#CurrentUser").val().trim() + " your leave request has been approved");
+        window.location.replace("/Home")
+      }
+    }
+</script>
+{% endblock content %}
+
+<!-- // Get all
+      // var url = 'http://localhost:8000/api/Accounts/';
+      // fetch(url)
+      // .then((resp) => resp.json())
+      // .then(function(data){
+      //   console.log(data);
+      // }); -->
+
+      
+      <!-- $.ajax({
+        async: true,
+        type:'Post',
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        headers: {'X-CSRFToken':csrftoken},
+        data: JSON.stringify(log),
+        url: '/api/Accounts/update_log/8/',
+        success: function(){
+          alert("yeeeeeeeeeeeeeeeeeeeeeeeeeeees")
+        },
+        error: function(xhr){
+          alert("nnnnXXXXnnnn: " + xhr.error)
+        }
+      }) -->

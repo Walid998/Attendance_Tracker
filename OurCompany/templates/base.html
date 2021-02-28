@@ -1,0 +1,188 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock title %}</title>
+    <link rel="stylesheet" href="{% static 'bootstrap/Content/bootstrap.css'%}">
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+
+    <style>
+        .navbar{
+            background-color: #0264d6
+        }
+        #NotiDropdown i{
+            font-size: 24px;
+        }
+        #NotiDropdown span{
+            color:#fff;
+            background-color: tomato;
+            font-size: 12px;
+        }
+        #SettingDiv{
+            margin-top: 48px;
+            margin-right: -75px;
+            max-width: 100%;
+        }
+
+        #NotiDiv{
+            min-width: 350px;
+            max-width: 100%;
+            min-height: 380px;
+            max-height: 420px;
+            margin-top: 48px;
+            margin-right: -200px;
+            padding-bottom: 0px;
+        }
+        #noti-list{
+            overflow-y: scroll;
+            min-height: 380px;
+            max-height: 420px;
+        }
+        #MarkARead{
+            text-align:center;
+            background-color: rgb(235, 235, 235);
+            font-size: 14px;
+            font-weight: bold;color: rgb(112, 112, 112);
+            border-top: 2px solid #ccc;
+        }
+        .dropdown-divider{
+            margin: 0px;
+        }
+        #not_read{
+            float: right;
+            width: 9px;
+            height: 9px;
+            background-color: #0264d6;
+            margin-top: 11px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" style="font-weight: bold;cursor: default;">Company</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="nav navbar-nav">
+            
+            {% if user.is_authenticated and user.groups.all.0.name == 'Manager' %}
+            <li class="nav-item active">
+                <a class="nav-link" href="{% url 'Dashboard'%}">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <!-- <li class="nav-item">
+                <a class="nav-link" href="#">Manage Users</a>
+            </li> -->
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'Requests'%}">Requests</a>
+            </li>
+            {% endif %}
+            </ul>
+            <ul class="nav navbar-nav ml-auto">
+            {% if user.is_authenticated and user.groups.all.0.name == 'Manager' %}
+            <li class="nav-item dropleft">
+                <a class="nav-link" href="#" id="NotiDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-bell"></i>
+                {% if not_read != 0 %}
+                <span id="NotiNum" class="badge badge-light">{{not_read}}</span>
+                {% else %}
+                <span id="NotiNum" class="badge badge-light" style="visibility: hidden">{{not_read}}</span>
+                {% endif %}
+                </a>
+                <div id="NotiDiv" class="dropdown-menu" aria-labelledby="NotiDropdown">
+                    <span class="dropdown-item disabled">Notifications (<span id="NotiNum_inner">{{not_read}}</span>)</span>
+                    <div class="dropdown-divider"></div>
+                    <div id="noti-list">
+                    {% for noti in notifs %}
+                    {% if noti.is_readed == False %}
+                    <a class="dropdown-item" style="border-bottom:1px solid rgb(187, 187, 187);background-color: rgb(250, 250, 250);" onclick="ReadNoti(this)" href="#">
+                        <input type="hidden" value="{{noti.id}}">
+                        <b><i>{{noti.n_from}}</i></b> {{noti.message}}
+                        <br><span class="badge badge-light">at {{noti.created_at}}</span><span id="not_read"></span>
+                    </a>
+                    {% else %}
+                    <a class="dropdown-item" style="border-bottom:1px solid #ccc" href="{% url 'Requests'%}">
+                    <b><i>{{noti.n_from}}</i></b> {{noti.message}}
+                    <br><span class="badge badge-light">at {{noti.created_at}}</span>
+                    </a>
+                    {% endif %}
+                    {% endfor %}
+
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a id="MarkARead" class="dropdown-item" href="#">mark all as read <i class="far fa-check-circle"></i></a>
+                </div>
+            </li>
+            {% endif %}
+            {% if user.is_authenticated %}
+            <li class="nav-item dropleft">
+                <a class="nav-link" href="#" id="SettDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i style="font-size: 22px;" class="fas fa-sort-down"></i>
+                </a>
+                <div id="SettingDiv" class="dropdown-menu" aria-labelledby="SettDropdown">
+                    <a class="dropdown-item" href="#"><i class="fas fa-user-cog"></i> Profile</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'logout'%}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </li>
+            {%else%}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login'%}">Login</a>
+                </li>
+            {%endif%}
+            </ul>
+        </div>
+    </div>
+    </nav>
+    <div class="container mt-5 pt-4">
+    {% block content %}
+    {% endblock content %}
+    </div>
+    <script src="{% static 'jQuery/jquery-3.4.1.js'%}"></script>
+    <script src="{% static 'bootstrap/Scripts/bootstrap.js'%}"></script>
+
+    <script type="text/javascript">
+        const url = "ws://localhost:8000/ws/";
+        const ws = new WebSocket(url);
+        ws.onmessage = function(event){
+            console.log("message is recieved");
+            NotiCounter();
+            let noti_holder = String(event.data).split("^")
+            
+            if(noti_holder[3] == new Date($.now()).toLocaleDateString())
+            {
+                noti_holder[3] = "Today"
+            }
+            $("#noti-list").prepend(
+                '<a class="dropdown-item" style="border-bottom:1px solid rgb(187, 187, 187);background-color: rgb(250, 250, 250);" onclick="ReadNoti(this)" href="#">'
+                +'<input type="hidden" value="'+noti_holder[0]+'">'
+                +'<b><i>'+noti_holder[1]+'</i></b> '+noti_holder[2]
+                +'<br><span class="badge badge-light">at '+noti_holder[3]+'</span><span id="not_read"></span>'
+                +'</a>')
+        }
+        function NotiCounter(){
+            var noti_num = parseInt($("#NotiNum").text());
+            noti_num += 1;
+            $("#NotiNum").text(noti_num);
+            $("#NotiNum_inner").text(noti_num);
+            $("#NotiNum").css("visibility", "visible");
+        }
+
+        function ReadNoti(noti){
+            var noti_id = $(noti).children("input").val();
+            var url = "http://localhost:8000/api/Accounts/read_noti/"+noti_id+"/"
+            fetch(url,{
+                method:'GET',
+                headers: {'Content-type':'application/json'},
+            }).then(function(response){
+                window.location.replace("/Requests/");
+            });
+        }
+      </script>
+</body>
+</html>
