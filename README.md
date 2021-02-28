@@ -26,6 +26,7 @@ For Managers - In The Dashboard each manager:
 <ol>
   <li>Python 3.6 or higher.</li>
   <li> you have to install this pachages in you environment:
+    
   ``` 
   pip install django==2.2.0
   pip install channels==2.0.0
@@ -81,7 +82,7 @@ and login with any user you want
 </li>
 </ol>
 
-That's all about how the application works. <i>Thank You</i>
+### That's all about how the application works. <i>Thank You</i>
 
 
 
