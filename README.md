@@ -24,7 +24,7 @@ For Managers - In The Dashboard each manager:
 ## Usage:
 
 <ol>
-<li> required pachages:
+<li> you have to install this pachages in you environment:
 
 ``` 
 pip install django==2.2.0
@@ -33,5 +33,45 @@ pip install channels-redis==2.2.0
 pip install django_crispy_forms
 pip install djangorestframework
 ```
+</li>
+<li> go to project directory and run:
+
+``` 
+python manage.py makemigrations 
+python manage.py migrate
+```
+</li>
+<li> then create superuser:
+
+``` 
+python manage.py createsuperuser
+```
+</li>
+<li> after that run the project:
+
+``` 
+python manage.py runserver
+```
+</li>
+<li> go to  
+
+``` 
+http://localhost:8000/Admin/
+```
+and login with this superuser account
+</li>
+<li> try to add new user then choose a group of:
+
+``` 
+Employee
+Manager
+```
+</li>
+<li> last step go to:
+  
+``` 
+http://localhost:8000/accounts/login/
+```
+and login with any user you want 
 </li>
 </ol>
