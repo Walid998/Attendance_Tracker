@@ -7,6 +7,8 @@ from django.contrib.auth import logout
 from Accounts.models import UsersLogs,Notifications
 from .serializers import UsersLogsSerializer
 from Accounts.api import serializers
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 @api_view(['GET'])
 def api_get_all_logs(request):
@@ -81,6 +83,30 @@ def cancel_request(request,pk):
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['POST'])
+def action_with_selectd(request,action):
+    leave_requests = str(request.data['selected_requests'])
+    leave_requests = leave_requests.split(",")
+    leave_requests = leave_requests[:-1]
+    channel_layer = get_channel_layer()
+    if action == "Approve":
+        for req_id in leave_requests:
+            UsersLog = UsersLogs.objects.get(id=req_id)
+            UsersLog.allow_leave = 1
+            UsersLog.save()
+            async_to_sync(channel_layer.group_send)(
+                f'personal_{UsersLog.user_id}',
+                {'type' : 'websocket.message','text' : 'Approved'})
+    elif action == "Cancel":
+        for req_id in leave_requests:
+            UsersLog = UsersLogs.objects.get(id=req_id)
+            UsersLog.leave_request_at = None
+            UsersLog.save()
+            async_to_sync(channel_layer.group_send)(
+                f'personal_{UsersLog.user_id}',
+                {'type' : 'websocket.message','text' : 'Cancelled'})
+
+    return Response("action taken")
 @api_view(['DELETE'])
 def delete_UserLog(request,pk):
     UsersLog = None
@@ -116,7 +142,7 @@ def read_noti(request,noti_id):
         return Response("Noti has been read successfully !!")
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    
+
 
 # serializer = UsersLogsSerializer(instance = UsersLog,data=request.data)
 #         if serializer.is_valid():

@@ -2,6 +2,7 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from .models import UsersLogs,Notifications
 from django.utils import timezone
+from .decorators import allowed_users
 # Create your views here.
 @login_required
 def home(request):
@@ -9,8 +10,11 @@ def home(request):
         return redirect('Home')
     elif request.user.groups.filter(name="Manager").exists():
         return redirect('Dashboard')
+    else:    
+        return redirect('logout')
     
 @login_required
+@allowed_users(allowed_roles=['Employee'])
 def employee_home(request):
     UserLog = None
     try:
@@ -27,10 +31,11 @@ def employee_home(request):
     return render(request,'employee_home.html',{"CurrentLog":UserLog})
 
 @login_required
+@allowed_users(allowed_roles=['Manager'])
 def manager_home(request):
     # counters
     attendants = UsersLogs.objects.filter(is_logedout = False).count()
-    leave_requests = UsersLogs.objects.filter(leave_request_at__isnull=False,is_logedout = False).count()
+    leave_requests = UsersLogs.objects.filter(leave_request_at__isnull=False,is_logedout = False,allow_leave=False).count()
     context = {
         "attendants":attendants,
         "leave_requests":leave_requests
@@ -38,6 +43,7 @@ def manager_home(request):
     return render(request,'manager_home.html',context)
 
 @login_required
+@allowed_users(allowed_roles=['Manager'])
 def employees_requests(request):
     leave_req = UsersLogs.objects.filter(leave_request_at__isnull=False,allow_leave=False,is_logedout = False)
     not_read_notific = Notifications.objects.all().filter(is_readed = 0)
@@ -45,3 +51,6 @@ def employees_requests(request):
         noti.is_readed = 1
         noti.save()
     return render(request,'employees_requests.html',{"leave_requests":leave_req})
+
+def forbeddin(request):
+    return render(request,"registration/forbeddin.html")

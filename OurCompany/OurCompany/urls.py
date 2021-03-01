@@ -16,13 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls.conf import include
-from Accounts.views import home,manager_home,employee_home,employees_requests
+from Accounts.views import forbeddin, home,manager_home,employee_home,employees_requests
 
 urlpatterns = [
     path('', home),
     path('Home/',employee_home,name="Home"),
     path('Dashboard/',manager_home,name="Dashboard"),
     path('Requests/',employees_requests,name="Requests"),
+    path('forbeddin/',forbeddin,name="forbeddin"),
     path('admin/', admin.site.urls),
     path('accounts/',include("django.contrib.auth.urls")),
     path('api/Accounts/',include("Accounts.api.urls","Accounts_api"))

@@ -131,12 +131,15 @@
     const emp_ws = new WebSocket(emp_url);
     emp_ws.onmessage = function(event){
       if(event.data == "Cancelled"){
-      alert("Hi "+ $("#CurrentUser").val().trim() + " your leave request has been cancelled !")
+      alert(" your leave request has been cancelled !")
       window.location.replace("/Home")
       }
       else if (event.data == "Approved"){
-        alert("hi "+ $("#CurrentUser").val().trim() + " your leave request has been approved");
+        alert(" your leave request has been approved");
         window.location.replace("/Home")
+      }
+      else{
+        alert("something")
       }
     }
 </script>
